@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Webcam Live Stream</title>
+  </head>
+  <body>
+    <h1>Webcam Stream</h1>
+    <video id="video" autoplay playsinline></video>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const video = document.getElementById('video');
+
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+          video.srcObject = stream;
+
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+
+          setInterval(() => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            const image = canvas.toDataURL('image/webp');
+            socket.emit('stream', image);
+          }, 100);
+        });
+
+      socket.on('stream', image => {
+        video.srcObject = null;
+        video.src = image;
+      });
+    </script>
+  </body>
+</html>
